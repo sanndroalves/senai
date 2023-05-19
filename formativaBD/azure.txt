@@ -1,0 +1,4 @@
+-- AZURE ALESSANDRO ALVES --
+LINK: unisystem2023.mysql.database.azure.com
+USUARIO: senai_admin
+SENHA: S3nai_2023 ou S#nai_2023
