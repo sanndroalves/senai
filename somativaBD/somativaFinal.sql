@@ -1,4 +1,5 @@
-
+create database universitySystem;
+use universitySystem;
 
 create table niveis(
 	idNivel int auto_increment primary key,
@@ -151,7 +152,12 @@ create table status_tarefa(
 	idStatus int primary key auto_increment,
     descricao varchar(25) not null
 );
-
+insert into status_tarefa (descricao) values
+	('Aberto'),
+	('Em andamento'),
+	('Concluída'),
+	('Encerrada');
+    
 create table tarefa(
 	idTarefa int primary key auto_increment,
     nome varchar(50) not null,
@@ -168,6 +174,15 @@ create table tarefa(
     foreign key(idStatus_FK) references status_tarefa(idStatus)
 );
 
+insert into tarefa (nome, descricao, dtPrazo, dtAbertura, idLocal_FK, idUsuario_FK, idStatus_FK) VALUES
+	('MANUTENÇÃO PROJETOR', 'projeto danificado', '2023-06-07', '2023-06-01 22:09', 1, 1, 1),
+	('PINTURA PAREDE', 'pintar area', '2023-07-17', '2023-06-01 22:09', 2, 2, 1),
+	('PC LAB', 'resetar pc', '2023-08-01', '2023-06-01 22:09', 3, 2, 1);
+
+insert into tarefa (nome, descricao, dtPrazo, dtAbertura, idLocal_FK, idUsuario_FK, idStatus_FK) VALUES
+	('CADEIRA QUEBRADA', 'manutencao da cadeira', '2023-07-14', '2023-06-01 22:09', 1, 2, 1);
+
+select * from tarefa;
 create table tarefa_responsaveis(
 	idResponsavel int primary key auto_increment,
     idTarefa_FK int not null,
@@ -176,6 +191,13 @@ create table tarefa_responsaveis(
     foreign key(idResponsavel_FK) references usuario(idUsuario),
     foreign key(idTarefa_FK) references tarefa(idTarefa)
 );
+
+insert tarefa_responsaveis (idTarefa_FK, idResponsavel_FK) values
+	(4, 2),
+	(4, 3),
+	(5, 1),
+	(6, 1),
+	(6, 2);
 
 create table tarefa_andamento(
 	idComentario int primary key auto_increment,
@@ -198,6 +220,36 @@ create table tarefa_fotos(
     foreign key(idStatus_FK) references status_tarefa(idStatus),
     foreign key(idUsuario_FK) references usuario(idUsuario)
 );
+
+-- CONSULTAS
+
+-- (A)
+select ta.nome, ta.descricao, re.idResponsavel_FK, us.nome FROM tarefa as ta
+inner join tarefa_responsaveis as re ON ta.idTarefa = re.idTarefa_FK
+inner join usuario as us ON re.idResponsavel_FK = us.idUsuario
+inner join status_tarefa as st ON ta.idStatus_FK = st.idStatus
+WHERE ta.idStatus_FK = 1;
+
+-- (B)
+select lo.idLocal, lo.nome from local as lo
+inner join tarefa as ta on ta.idLocal_FK = lo.idLocal
+group by lo.idLocal HAVING count(lo.idLocal) >= 2;
+
+-- (C)
+select us.idUsuario, us.nome from usuario as us
+inner join tarefa_responsaveis as re on re.idResponsavel_FK = us.idUsuario
+group by us.idUsuario HAVING count(us.idUsuario) >= 2;
+
+-- (D)
+select ev.nomeEvento, ev.data, ev.Local_FK, lo.nome, ta.nome, ta.descricao, ta.dtAbertura from evento as ev
+inner join tarefa as ta ON ta.idLocal_FK = ev.local_FK
+inner join local as lo ON lo.idLocal = ev.local_FK
+WHERE ev.data > NOW() AND ta.idStatus_FK = 1;
+
+-- (E)
+select lo.idLocal, lo.nome, COUNT() from local as lo
+inner join tarefa as ta ON ta.idLocal_FK = lo.idLocal
+group by id.idLocal;
     
     
     
