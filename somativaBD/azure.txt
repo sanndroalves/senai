@@ -1,0 +1,4 @@
+LINK: universitysystem.mysql.database.azure.com
+
+user: useracess
+password: S3nai1234
