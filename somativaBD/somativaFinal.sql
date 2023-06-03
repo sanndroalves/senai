@@ -152,12 +152,7 @@ create table status_tarefa(
 	idStatus int primary key auto_increment,
     descricao varchar(25) not null
 );
-insert into status_tarefa (descricao) values
-	('Aberto'),
-	('Em andamento'),
-	('Concluída'),
-	('Encerrada');
-    
+
 create table tarefa(
 	idTarefa int primary key auto_increment,
     nome varchar(50) not null,
@@ -174,15 +169,6 @@ create table tarefa(
     foreign key(idStatus_FK) references status_tarefa(idStatus)
 );
 
-insert into tarefa (nome, descricao, dtPrazo, dtAbertura, idLocal_FK, idUsuario_FK, idStatus_FK) VALUES
-	('MANUTENÇÃO PROJETOR', 'projeto danificado', '2023-06-07', '2023-06-01 22:09', 1, 1, 1),
-	('PINTURA PAREDE', 'pintar area', '2023-07-17', '2023-06-01 22:09', 2, 2, 1),
-	('PC LAB', 'resetar pc', '2023-08-01', '2023-06-01 22:09', 3, 2, 1);
-
-insert into tarefa (nome, descricao, dtPrazo, dtAbertura, idLocal_FK, idUsuario_FK, idStatus_FK) VALUES
-	('CADEIRA QUEBRADA', 'manutencao da cadeira', '2023-07-14', '2023-06-01 22:09', 1, 2, 1);
-
-select * from tarefa;
 create table tarefa_responsaveis(
 	idResponsavel int primary key auto_increment,
     idTarefa_FK int not null,
@@ -191,13 +177,6 @@ create table tarefa_responsaveis(
     foreign key(idResponsavel_FK) references usuario(idUsuario),
     foreign key(idTarefa_FK) references tarefa(idTarefa)
 );
-
-insert tarefa_responsaveis (idTarefa_FK, idResponsavel_FK) values
-	(4, 2),
-	(4, 3),
-	(5, 1),
-	(6, 1),
-	(6, 2);
 
 create table tarefa_andamento(
 	idComentario int primary key auto_increment,
@@ -221,6 +200,34 @@ create table tarefa_fotos(
     foreign key(idUsuario_FK) references usuario(idUsuario)
 );
 
+insert into status_tarefa (descricao) values
+	('Aberto'),
+	('Em andamento'),
+	('Concluída'),
+	('Encerrada');
+    
+insert into tarefa (nome, descricao, dtPrazo, dtAbertura, idLocal_FK, idUsuario_FK, idStatus_FK) VALUES
+	('MANUTENÇÃO PROJETOR', 'projeto danificado', '2023-06-07', '2023-06-01 22:09', 1, 1, 1),
+	('PINTURA PAREDE', 'pintar area', '2023-07-17', '2023-06-01 22:09', 2, 2, 1),
+	('PC LAB', 'resetar pc', '2023-08-01', '2023-06-01 22:09', 3, 2, 1);
+
+insert into tarefa (nome, descricao, dtPrazo, dtAbertura, idLocal_FK, idUsuario_FK, idStatus_FK) VALUES
+	('CADEIRA QUEBRADA', 'manutencao da cadeira', '2023-07-14', '2023-06-01 22:09', 1, 2, 1);
+    
+insert into tarefa (nome, descricao, dtPrazo, dtAbertura, idLocal_FK, idUsuario_FK, idStatus_FK) VALUES
+	('Janela nova', 'colocar', '2023-08-22', NOW(), 2, 3, 1);
+insert into tarefa (nome, descricao, dtPrazo, dtAbertura, idLocal_FK, idUsuario_FK, idStatus_FK) VALUES
+	('MESA NOVA', 'colocar2', '2023-10-23', NOW(), 1, 1, 1);
+    
+insert tarefa_responsaveis (idTarefa_FK, idResponsavel_FK) values
+	(1, 2),
+	(1, 3),
+	(2, 1),
+	(3, 1),
+	(4, 3),
+	(5, 2),
+	(5, 1);
+    
 -- CONSULTAS
 
 -- (A)
@@ -247,9 +254,34 @@ inner join local as lo ON lo.idLocal = ev.local_FK
 WHERE ev.data > NOW() AND ta.idStatus_FK = 1;
 
 -- (E)
-select lo.idLocal, lo.nome, COUNT() from local as lo
+select lo.idLocal, lo.nome, count(ta.idLocal_FK) as qtdTarefa from local as lo
 inner join tarefa as ta ON ta.idLocal_FK = lo.idLocal
-group by id.idLocal;
-    
-    
-    
+group by ta.idLocal_FK;
+
+-- (F)
+select lo.idLocal, lo.nome, count(ta.idLocal_FK) as qtdTarefaConcluida from local as lo
+inner join tarefa as ta ON ta.idLocal_FK = lo.idLocal
+WHERE ta.idStatus_FK = 3
+group by ta.idLocal_FK;
+
+-- (G)
+select us.idUsuario, us.nome, count(tar.idResponsavel_FK) as qtdTarefa from usuario as us
+inner join tarefa_responsaveis as tar ON tar.idResponsavel_FK = us.idUsuario
+group by tar.idResponsavel_FK;
+
+-- (H)
+select us.idUsuario, us.nome, count(tar.idResponsavel_FK) as qtdTarefa from usuario as us
+inner join tarefa_responsaveis as tar ON tar.idResponsavel_FK = us.idUsuario
+inner join tarefa as ta on ta.idTarefa = tar.idTarefa_FK
+WHERE ta.idStatus_FK = 3
+group by tar.idResponsavel_FK;
+
+-- (I)
+select
+   lo.idLocal, lo.nome,
+   count(lo.idLocal) total,
+   count(ta.idLocal_FK) / count(distinct month(ta.dtAbertura)) qtde_media_mes
+from local as lo
+inner join tarefa as ta ON lo.idLocal = ta.idLocal_FK
+group by ta.idLocal_FK
+order by ta.idLocal_FK;
